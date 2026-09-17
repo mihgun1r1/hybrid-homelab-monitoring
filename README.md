@@ -88,8 +88,6 @@ The entire stack runs inside Docker using an isolated bridge network (`monitorin
 
 ## Deployment & Verification
 
-## Deployment & Verification
-
 ### 1. Initial Setup
 ```bash
 git clone https://github.com/mihgun1r1/hybrid-homelab-monitoring.git
