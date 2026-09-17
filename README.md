@@ -1,8 +1,14 @@
 # Enterprise Hybrid Homelab & Active Directory Observability Stack
 
-An automated, containerized infrastructure monitoring and directory services stack designed for hybrid homelab environments. The project integrates a fully functional Samba 4 Active Directory Domain Controller, host and directory metrics collection via Prometheus, a custom Python LDAP exporter, provisioned Grafana dashboards, automated storage sorting pipelines, and Telegram incident alerts.
+An automated, containerized infrastructure monitoring and directory services stack designed for enterprise homelab environments. The project integrates a fully functional Samba 4 Active Directory Domain Controller, host and directory telemetry via Prometheus, a custom Python LDAP exporter, provisioned single-pane-of-glass Grafana dashboards, automated storage pipelines, and Telegram incident alerting.
 
 Engineered and validated on macOS with automated one-command portability to headless Linux hosts (such as an Intel NUC running Ubuntu Server).
+
+---
+
+## Operations Dashboard (NOC Console View)
+
+![Grafana NOC Operations Console](docs/screenshots/grafana_dashboard.png)
 
 ---
 
@@ -10,13 +16,34 @@ Engineered and validated on macOS with automated one-command portability to head
 
 The entire stack runs inside Docker using an isolated bridge network (`monitoring_net`):
 
+[ Host Hardware / OS Layer ]
+│
+├─► Node Exporter ─────────────┐ (HTTP GET /metrics)
+│                              ▼
+├─► Samba 4 AD DC ──► AD Exporter ──► Prometheus TSDB ──► Grafana Dashboard
+│                                            │
+└─► File Browser ──► Auto-Organizer          ▼
+Alertmanager ──► AI Responder Webhook
+
+
 * **Samba 4 AD DC (`samba_ad`):** Full Active Directory Domain Controller (functional level 2012 R2). Serves LDAP (389), LDAPS (636), Kerberos (88), and internal AD DNS (53).
 * **AD Prometheus Exporter (`ad_exporter`):** Custom Python service (`ldap3` + `prometheus_client`). Scrapes the AD directory every 15 seconds, decodes `userAccountControl` bitmasks to differentiate between active and disabled accounts, counts security groups, and exposes Prometheus metrics on port 9150.
 * **Prometheus (`prometheus`):** Core time-series database scraping system metrics from `node_exporter` and domain stats from `ad_exporter`. Evaluates threshold alerting rules.
 * **Alertmanager (`alertmanager`):** Handles alert deduplication, grouping, and dispatching to notification webhooks.
 * **AI Incident Responder (`ai_responder`):** Python-based alert ingestion service receiving webhooks from Alertmanager and forwarding incident telemetry to Telegram.
 * **Grafana (`grafana`):** Unified visualization layer. Dashboards and Prometheus data sources are configured completely as code via declarative provisioning.
-* **Storage & Auto-Organizer (`filebrowser`, `auto_organizer`):** Web file management UI backed by a background daemon that scans ingest directories and sorts files by MIME type (documents, media, archives, code).
+* **Storage & Auto-Organizer (`filebrowser`, `auto_organizer`):** Web file management UI backed by an event-driven background daemon (`watchdog`) that scans ingest directories and sorts files by MIME type (documents, media, archives, code).
+
+---
+
+## Telemetry & Verification Proofs
+
+| Prometheus Scrape Targets (All UP) | Real-time Auto-Organizer Processing Logs |
+|:---:|:---:|
+| ![Prometheus Targets](docs/screenshots/prometheus_targets.png) | ![Organizer Logs](docs/screenshots/organizer_logs.png) |
+
+### Web Storage Management Console
+![File Browser UI](docs/screenshots/filebrowser_ui.png)
 
 ---
 
@@ -54,63 +81,35 @@ The entire stack runs inside Docker using an isolated bridge network (`monitorin
 
 ### 1. Initial Setup
 ```bash
-# Clone repository
-git clone <REPOSITORY_URL>
+git clone [https://github.com/mihgun1r1/hybrid-homelab-monitoring.git](https://github.com/mihgun1r1/hybrid-homelab-monitoring.git)
 cd hybrid-homelab-monitoring
-
-# Create environment file from template
 cp .env.example .env
-
-```
-
-### 2. Execute Deployment Script
-
-```bash
+2. Execute Deployment Script
+Bash
 chmod +x deploy.sh
 ./deploy.sh
+3. Verify Health Endpoints
+Prometheus Targets: Open http://localhost:9090/targets and ensure active_directory, node_exporter, and prometheus show UP.
 
-```
+AD Exporter Output: Verify raw metrics at http://localhost:9150/metrics.
 
-### 3. Verify Health Endpoints
+Grafana Dashboard: Access http://localhost:3000 to review CPU, memory, storage utilization, and Active Directory user status.
 
-* **Prometheus Targets:** Open `http://localhost:9090/targets` and ensure `active_directory`, `node_exporter`, and `prometheus` show `UP`.
-* **AD Exporter Output:** Verify raw metrics at `http://localhost:9150/metrics`.
-* **Grafana Dashboard:** Access `http://localhost:3000` to review CPU, memory, storage utilization, and Active Directory user status.
+Active Directory Management CLI
+Manage directory objects directly using samba-tool inside the domain controller container:
 
----
-
-## Active Directory Management CLI
-
-Manage directory objects directly using `samba-tool` inside the domain controller container:
-
-* **Create Domain User:**
-```bash
+Bash
+# Create Domain User
 docker compose exec samba_ad samba-tool user create devops_user "Passw0rd2026!" --description="DevOps Team Member"
 
-```
-
-
-* **Disable Account:**
-```bash
+# Disable Account
 docker compose exec samba_ad samba-tool user disable devops_user
 
-```
-
-
-* **Enable Account:**
-```bash
+# Enable Account
 docker compose exec samba_ad samba-tool user enable devops_user
 
-```
-
-
-* **List All Domain Users:**
-```bash
+# List All Domain Users
 docker compose exec samba_ad samba-tool user list
 
-```
-
-
-* **List Security Groups:**
-```bash
+# List Security Groups
 docker compose exec samba_ad samba-tool group list
