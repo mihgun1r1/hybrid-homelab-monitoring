@@ -1,0 +1,18 @@
+# Secrets & sensitive credentials
+.env
+
+# macOS system metadata
+.DS_Store
+*/.DS_Store
+*/*/.DS_Store
+
+# Dynamic storage, DBs & test data
+storage/data/
+storage/watch/
+storage/filebrowser.db
+samba_fs.ext4
+
+# Python bytecode & environments
+__pycache__/
+*.pyc
+.venv/

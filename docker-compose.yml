@@ -1,0 +1,131 @@
+services:
+  # 1. Host metric collector
+  node_exporter:
+    image: prom/node-exporter:v1.8.1
+    container_name: node_exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    networks:
+      - monitoring_net
+
+  # 2. Server Prometheus
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - monitoring_net
+
+  # 3. Alertmanager
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    networks:
+      - monitoring_net
+
+  # 4. Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - monitoring_net
+
+  # 5. AI Incident Responder
+  ai_responder:
+    build: ./ai_responder
+    container_name: ai_responder
+    restart: unless-stopped
+    ports:
+      - "5005:5000"
+    environment:
+       - PYTHONUNBUFFERED=1
+       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+       - GEMINI_API_KEY=${GEMINI_API_KEY}
+    networks:
+      - monitoring_net
+
+  # 6. Filebrowser (Web File Storage)
+  filebrowser:
+    image: filebrowser/filebrowser:latest
+    container_name: filebrowser
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./storage/data:/srv
+      - ./storage/filebrowser.db:/database/filebrowser.db
+    networks:
+      - monitoring_net
+
+  # 7. Storage Auto-Organizer Daemon
+  auto_organizer:
+    build: ./auto_organizer
+    container_name: auto_organizer
+    restart: unless-stopped
+    volumes:
+      - ./storage/data:/data
+    networks:
+      - monitoring_net
+
+  # 8. Active Directory Domain Controller (Samba 4 AD DC)
+  samba_ad:
+    build: ./samba_ad
+    container_name: samba_ad
+    restart: unless-stopped
+    privileged: true
+    environment:
+      - DOMAIN=HOMELAB
+      - REALM=HOMELAB.LAN
+      - ADMIN_PASS=AdminPassword123!
+    volumes:
+      - samba_data:/var/lib/samba
+    networks:
+      - monitoring_net
+
+  # 9. Active Directory Prometheus Exporter
+  ad_exporter:
+    build: ./ad_exporter
+    container_name: ad_exporter
+    restart: unless-stopped
+    environment:
+      - LDAP_SERVER=samba_ad
+      - LDAP_USER=CN=Administrator,CN=Users,DC=homelab,DC=lan
+      - LDAP_PASSWORD=AdminPassword123!
+    ports:
+      - "9150:9150"
+    depends_on:
+      - samba_ad
+    networks:
+      - monitoring_net
+
+networks:
+  monitoring_net:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  samba_data:

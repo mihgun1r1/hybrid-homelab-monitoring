@@ -1,0 +1,32 @@
+global:
+  scrape_interval: 15s     # Once in 15 sec collect metrics
+  evaluation_interval: 15s # Once in 15 sec check alert rules
+
+# Connect alert rules
+rule_files:
+  - "alert.rules.yml"
+
+# Specify where to send triggered alerts
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 'alertmanager:9093'
+
+# Monitoring goals (targets)
+scrape_configs:
+  # Prometheus server metrics
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Metrics of hardware and host OS (Node Exporter)
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['node_exporter:9100']
+
+  # Active Directory metrics
+  - job_name: 'active_directory'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['ad_exporter:9150']
