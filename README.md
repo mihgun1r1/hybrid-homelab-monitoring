@@ -1,5 +1,13 @@
 # Enterprise Hybrid Homelab & Active Directory Observability Stack
 
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)](https://prometheus.io/)
+[![Grafana](https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white)](https://grafana.com/)
+[![Python](https://img.shields.io/badge/Python_3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Samba](https://img.shields.io/badge/Samba_4_AD_DC-BA0000?style=for-the-badge&logo=samba&logoColor=white)](https://www.samba.org/)
+[![Telegram](https://img.shields.io/badge/Telegram_Alerts-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](https://core.telegram.org/bots/api)
+[![Ubuntu](https://img.shields.io/badge/Ubuntu_Server-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)](https://ubuntu.com/)
+
 An automated, containerized infrastructure monitoring and directory services stack designed for enterprise homelab environments. The project integrates a fully functional Samba 4 Active Directory Domain Controller, host and directory telemetry via Prometheus, a custom Python LDAP exporter, provisioned single-pane-of-glass Grafana dashboards, automated storage pipelines, and Telegram incident alerting.
 
 Engineered and validated on macOS with automated one-command portability to headless Linux hosts (such as an Intel NUC running Ubuntu Server).
@@ -16,6 +24,7 @@ Engineered and validated on macOS with automated one-command portability to head
 
 The entire stack runs inside Docker using an isolated bridge network (`monitoring_net`):
 
+```text
 [ Host Hardware / OS Layer ]
 │
 ├─► Node Exporter ─────────────┐ (HTTP GET /metrics)
@@ -23,8 +32,8 @@ The entire stack runs inside Docker using an isolated bridge network (`monitorin
 ├─► Samba 4 AD DC ──► AD Exporter ──► Prometheus TSDB ──► Grafana Dashboard
 │                                            │
 └─► File Browser ──► Auto-Organizer          ▼
-Alertmanager ──► AI Responder Webhook
-
+                                        Alertmanager ──► AI Responder Webhook
+```
 
 * **Samba 4 AD DC (`samba_ad`):** Full Active Directory Domain Controller (functional level 2012 R2). Serves LDAP (389), LDAPS (636), Kerberos (88), and internal AD DNS (53).
 * **AD Prometheus Exporter (`ad_exporter`):** Custom Python service (`ldap3` + `prometheus_client`). Scrapes the AD directory every 15 seconds, decodes `userAccountControl` bitmasks to differentiate between active and disabled accounts, counts security groups, and exposes Prometheus metrics on port 9150.
@@ -79,45 +88,51 @@ Alertmanager ──► AI Responder Webhook
 
 ## Deployment & Verification
 
+## Deployment & Verification
+
 ### 1. Initial Setup
 ```bash
-git clone [https://github.com/mihgun1r1/hybrid-homelab-monitoring.git](https://github.com/mihgun1r1/hybrid-homelab-monitoring.git)
+git clone https://github.com/mihgun1r1/hybrid-homelab-monitoring.git
 cd hybrid-homelab-monitoring
 cp .env.example .env
+# Edit .env with your Telegram bot token, chat ID, and domain passwords
+nano .env
 ```
-### 2. Execute Deployment Script
+
+### 2. Deploy the Stack
 ```bash
 chmod +x deploy.sh
 ./deploy.sh
 ```
+
 ### 3. Verify Health Endpoints
-Prometheus Targets: Open http://localhost:9090/targets and ensure active_directory, node_exporter, and prometheus show UP.
+* **Prometheus Targets:** Open [http://localhost:9090/targets](http://localhost:9090/targets) and ensure `active_directory`, `node_exporter`, and `prometheus` show **UP**.
+* **AD Exporter Output:** Verify raw metrics at [http://localhost:9150/metrics](http://localhost:9150/metrics).
+* **Grafana Dashboard:** Access [http://localhost:3000](http://localhost:3000) (default credentials: `admin` / `admin`) to review system metrics and domain telemetry.
 
-AD Exporter Output: Verify raw metrics at http://localhost:9150/metrics.
+---
 
-Grafana Dashboard: Access http://localhost:3000 to review CPU, memory, storage utilization, and Active Directory user status.
+## Active Directory Management CLI
 
-Active Directory Management CLI
-Manage directory objects directly using samba-tool inside the domain controller container:
+Manage directory objects directly using `samba-tool` inside the domain controller container:
 
-
-##### Create Domain User
-```bash
-docker compose exec samba_ad samba-tool user create devops_user "Passw0rd2026!" --description="DevOps Team Member"
-```
-#### Disable Account
-```bash
-docker compose exec samba_ad samba-tool user disable devops_user
-```
-#### Enable Account
-```bash
-docker compose exec samba_ad samba-tool user enable devops_user
-```
-#### List All Domain Users
-```bash
-docker compose exec samba_ad samba-tool user list
-```
-#### List Security Groups
-```bash
-docker compose exec samba_ad samba-tool group list
-```
+* **Create Domain User:**
+  ```bash
+  docker compose exec samba_ad samba-tool user create devops_user "Passw0rd2026!" --description="DevOps Team Member"
+  ```
+* **Disable Account:**
+  ```bash
+  docker compose exec samba_ad samba-tool user disable devops_user
+  ```
+* **Enable Account:**
+  ```bash
+  docker compose exec samba_ad samba-tool user enable devops_user
+  ```
+* **List All Domain Users:**
+  ```bash
+  docker compose exec samba_ad samba-tool user list
+  ```
+* **List Security Groups:**
+  ```bash
+  docker compose exec samba_ad samba-tool group list
+  ```
