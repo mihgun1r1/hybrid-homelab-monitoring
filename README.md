@@ -84,11 +84,11 @@ Alertmanager ──► AI Responder Webhook
 git clone [https://github.com/mihgun1r1/hybrid-homelab-monitoring.git](https://github.com/mihgun1r1/hybrid-homelab-monitoring.git)
 cd hybrid-homelab-monitoring
 cp .env.example .env
-2. Execute Deployment Script
-Bash
+### 2. Execute Deployment Script
+```bash
 chmod +x deploy.sh
 ./deploy.sh
-3. Verify Health Endpoints
+### 3. Verify Health Endpoints
 Prometheus Targets: Open http://localhost:9090/targets and ensure active_directory, node_exporter, and prometheus show UP.
 
 AD Exporter Output: Verify raw metrics at http://localhost:9150/metrics.
@@ -98,7 +98,7 @@ Grafana Dashboard: Access http://localhost:3000 to review CPU, memory, storage u
 Active Directory Management CLI
 Manage directory objects directly using samba-tool inside the domain controller container:
 
-Bash
+```bash
 # Create Domain User
 docker compose exec samba_ad samba-tool user create devops_user "Passw0rd2026!" --description="DevOps Team Member"
 
