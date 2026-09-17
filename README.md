@@ -100,23 +100,24 @@ Grafana Dashboard: Access http://localhost:3000 to review CPU, memory, storage u
 Active Directory Management CLI
 Manage directory objects directly using samba-tool inside the domain controller container:
 
+
+##### Create Domain User
 ```bash
-# Create Domain User
 docker compose exec samba_ad samba-tool user create devops_user "Passw0rd2026!" --description="DevOps Team Member"
 ```
-# Disable Account
+#### Disable Account
 ```bash
 docker compose exec samba_ad samba-tool user disable devops_user
 ```
-# Enable Account
+#### Enable Account
 ```bash
 docker compose exec samba_ad samba-tool user enable devops_user
 ```
-# List All Domain Users
+#### List All Domain Users
 ```bash
 docker compose exec samba_ad samba-tool user list
 ```
-# List Security Groups
+#### List Security Groups
 ```bash
 docker compose exec samba_ad samba-tool group list
 ```
