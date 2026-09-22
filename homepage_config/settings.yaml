@@ -1,0 +1,12 @@
+title: "Intel NUC Homelab"
+background:
+  opacity: 50
+theme: dark
+color: slate
+layout:
+  Storage & Management:
+    style: row
+    columns: 1
+  Monitoring & Infrastructure:
+    style: row
+    columns: 3
