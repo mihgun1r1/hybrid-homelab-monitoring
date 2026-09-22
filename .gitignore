@@ -16,3 +16,4 @@ samba_fs.ext4
 __pycache__/
 *.pyc
 .venv/
+.DS_Store
