@@ -1,12 +1,22 @@
-title: "Intel NUC Homelab"
-background:
-  opacity: 50
+---
+title: Homelab Infrastructure Hub
 theme: dark
 color: slate
+
+background:
+  image: https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimg.freepik.com%2Fpremium-vector%2Fhoney-bee-background_1027753-170.jpg%3Fw%3D2000&f=1&nofb=1&ipt=6b96b6d2aab7ffd3fa6dbd697330f593f93683121019426c2b7ec7e7c986d61f
+  blur: sm
+  opacity: 50
+
+cardBlur: md
+
 layout:
-  Storage & Management:
-    style: row
-    columns: 1
   Monitoring & Infrastructure:
     style: row
     columns: 3
+  Storage & Files:
+    style: row
+    columns: 2
+  Professional Profiles:
+    style: row
+    columns: 2

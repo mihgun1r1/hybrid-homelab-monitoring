@@ -1,21 +1,22 @@
+---
+- Monitoring & Infrastructure:
+    - Grafana:
+        icon: grafana.png
+        href: "http://localhost:3000/d/rYdddlPWk/homenucproject"
+        description: "Homelab & AD Telemetry"
+        ping: "http://localhost:3000/d/rYdddlPWk/homenucproject"
+    - Prometheus:
+        icon: prometheus.png
+        href: "http://localhost:9090"
+        description: "Metrics Engine & Scrapers"
+        ping: "http://localhost:9090/graph"
+    - Alertmanager:
+        icon: alertmanager.png
+        href: "http://localhost:9093"
+        description: "Alerts & Telegram Notifications"
+
 - Storage & Files:
     - File Browser:
         icon: filebrowser.png
         href: "http://localhost:8080"
         description: "Network Storage & File Management"
-
-- Monitoring & Infrastructure:
-    - Grafana:
-        icon: grafana.png
-        href: "http://localhost:3000"
-        description: "Homelab & AD Telemetry"
-
-    - Prometheus:
-        icon: prometheus.png
-        href: "http://localhost:9090"
-        description: "Metrics Engine & Scrapers"
-
-    - Alertmanager:
-        icon: alertmanager.png
-        href: "http://localhost:9093"
-        description: "Alerts & Telegram Notifications"
