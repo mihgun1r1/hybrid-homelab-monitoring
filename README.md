@@ -15,6 +15,12 @@ Engineered and validated on macOS with automated one-command portability to head
 
 ---
 
+## Service Landing Portal (Homepage)
+
+![Homepage Portal](docs/screenshots/homepage.png)
+
+---
+
 ## Operations Dashboard (Infrastructure & Directory Telemetry)
 
 ![Grafana NOC Operations Console](docs/screenshots/grafana_dashboard.png)
