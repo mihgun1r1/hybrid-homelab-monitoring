@@ -87,7 +87,8 @@ services:
     container_name: auto_organizer
     restart: unless-stopped
     volumes:
-      - ./storage/data:/data
+      - ./storage/watch:/storage/watch
+      - ./storage/organized:/storage/organized
     networks:
       - monitoring_net
 
