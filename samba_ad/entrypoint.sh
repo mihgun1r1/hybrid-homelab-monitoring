@@ -1,47 +1,63 @@
 #!/bin/bash
 set -e
 
-SMB_CONF="/etc/samba/smb.conf"
-SAMBA_DIR="/var/lib/samba"
-IMAGE_FILE="/samba_fs.ext4"
+SAMBA_DOMAIN=${SAMBA_DOMAIN:-HOMELAB}
+SAMBA_REALM=${SAMBA_REALM:-HOMELAB.LAN}
+ADMIN_PASS=${ADMIN_PASS:-AdminPassword123!}
 
-# 1. Virtual ext4 disk initialization
-if [ ! -f "$IMAGE_FILE" ]; then
-    echo "[INFO] Allocating virtual ext4 disk..."
-    fallocate -l 1G "$IMAGE_FILE" || dd if=/dev/zero of="$IMAGE_FILE" bs=1M count=1024
-    mkfs.ext4 -F "$IMAGE_FILE"
+# Check if loop device / ext4 disk is needed or already initialized
+if [ -f /var/lib/samba.img ] && ! mountpoint -q /var/lib/samba; then
+    mount -o loop /var/lib/samba.img /var/lib/samba || true
 fi
 
-# 2. Mount with POSIX ACLs enabled
-mkdir -p "$SAMBA_DIR"
-if ! mountpoint -q "$SAMBA_DIR"; then
-    mount -o loop,user_xattr,acl "$IMAGE_FILE" "$SAMBA_DIR"
-fi
+# Ensure directories exist
+mkdir -p /var/lib/samba/private /etc/samba
 
-# 3. Domain provisioning
-if [ ! -f "$SAMBA_DIR/private/sam.ldb" ]; then
-    echo "[INFO] Provisioning Samba AD Domain..."
-    rm -f "$SMB_CONF"
+# Check if domain was already provisioned
+if [ ! -f /var/lib/samba/private/sam.ldb ]; then
+    echo "[INFO] First start: Provisioning Samba AD Domain Controller..."
+    
+    # Remove any default/sample smb.conf so provision doesn't conflict
+    rm -f /etc/samba/smb.conf
 
     samba-tool domain provision \
+        --domain="${SAMBA_DOMAIN}" \
+        --realm="${SAMBA_REALM}" \
+        --adminpass="${ADMIN_PASS}" \
         --server-role=dc \
-        --use-rfc2307 \
-        --dns-backend=SAMBA_INTERNAL \
-        --realm="${REALM:-HOMELAB.LAN}" \
-        --domain="${DOMAIN:-HOMELAB}" \
-        --adminpass="${ADMIN_PASS:-AdminPassword123!}" \
-        --option="ldap server require strong auth = no" \
-        --option="nsupdate command = /bin/true"
+        --use-rfc2307
 
-    echo "[INFO] Provisioning finished."
+    # Link Kerberos config
+    if [ -f /var/lib/samba/private/krb5.conf ]; then
+        cp /var/lib/samba/private/krb5.conf /etc/krb5.conf
+    fi
+    echo "[INFO] Provisioning completed successfully."
+else
+    echo "[INFO] Existing Samba AD directory database found."
 fi
 
-# Ensure simple auth is active
-if ! grep -q "ldap server require strong auth = no" "$SMB_CONF" 2>/dev/null; then
-    sed -i '/\[global\]/a \        ldap server require strong auth = no' "$SMB_CONF" || true
+# Safety check: Verify server role inside smb.conf
+if ! grep -q "server role = active directory domain controller" /etc/samba/smb.conf 2>/dev/null; then
+    echo "[WARN] Fixing missing or incorrect 'server role' in /etc/samba/smb.conf..."
+    cat << EOF > /etc/samba/smb.conf
+[global]
+    netbios name = SAMBA-DC
+    realm = ${SAMBA_REALM}
+    workgroup = ${SAMBA_DOMAIN}
+    server role = active directory domain controller
+    idmap_ldb:use rfc2307 = yes
+    ldap server require strong auth = no
+    ntlm auth = yes
+
+[sysvol]
+    path = /var/lib/samba/sysvol
+    read only = No
+
+[netlogon]
+    path = /var/lib/samba/sysvol/${SAMBA_REALM,,}/scripts
+    read only = No
+EOF
 fi
 
-echo "nameserver 127.0.0.1" > /etc/resolv.conf 2>/dev/null || true
-
-echo "[INFO] Starting Samba AD in standard mode..."
-exec samba -i
+echo "[INFO] Starting Samba Active Directory Domain Controller..."
+exec samba -i -M single

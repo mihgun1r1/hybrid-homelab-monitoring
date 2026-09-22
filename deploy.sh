@@ -12,7 +12,7 @@ if ! docker compose version &> /dev/null; then
     exit 1
 fi
 
-echo "=== [2/4] Initializing environment configuration ==="
+echo "=== [2/4] Initializing environment configuration and directories ==="
 if [ ! -f .env ]; then
     if [ -f .env.example ]; then
         echo "[!] .env not found, generating from .env.example..."
@@ -28,8 +28,16 @@ EOF
     fi
 fi
 
-# Ensure storage directories exist
-mkdir -p storage/organized storage/watch
+# Ensure storage and provisioning directories exist
+mkdir -p storage/watch storage/organized
+mkdir -p grafana/provisioning/dashboards grafana/provisioning/datasources
+
+# Ensure permissions for mapped host volumes (if running as non-root, use sudo)
+if [ "$(id -u)" -eq 0 ]; then
+    chmod -R 777 storage
+else
+    sudo chmod -R 777 storage || true
+fi
 
 echo "=== [3/4] Building and launching core infrastructure ==="
 docker compose pull || true
@@ -37,12 +45,13 @@ docker compose build --parallel
 docker compose up -d
 
 echo "=== [4/4] Health checking core endpoints ==="
-sleep 10
+echo "[*] Waiting 15 seconds for services to initialize..."
+sleep 15
 
 endpoints=(
-    "http://localhost:3000|Grafana"
-    "http://localhost:9090|Prometheus"
-    "http://localhost:9093|Alertmanager"
+    "http://localhost:3000/api/health|Grafana"
+    "http://localhost:9090/-/healthy|Prometheus"
+    "http://localhost:9093/-/healthy|Alertmanager"
     "http://localhost:8080|Filebrowser"
     "http://localhost:9150/metrics|AD-Exporter"
 )

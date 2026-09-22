@@ -2,7 +2,24 @@
   "apiVersion": "dashboard.grafana.app/v2",
   "kind": "Dashboard",
   "metadata": {
-    "name": "rYdddlPWk"
+    "name": "rYdddlPWk",
+    "namespace": "default",
+    "uid": "0e775c6c-0aae-42f6-81f1-a7354db6312c",
+    "resourceVersion": "1790057527833992",
+    "generation": 1,
+    "creationTimestamp": "2026-09-22T06:12:07Z",
+    "labels": {
+      "grafana.app/deprecatedInternalID": "3602333307334656"
+    },
+    "annotations": {
+      "grafana.app/createdBy": "access-policy:service",
+      "grafana.app/managedBy": "classic-file-provisioning",
+      "grafana.app/managerId": "Homelab Dashboards",
+      "grafana.app/sourceChecksum": "68055ce1adba7f2fff338341ae630765",
+      "grafana.app/sourcePath": "/etc/grafana/provisioning/dashboards/homelab_dashboard.json",
+      "grafana.app/sourceTimestamp": "1789485162000",
+      "grafana.app/folder": ""
+    }
   },
   "spec": {
     "annotations": [
@@ -14877,7 +14894,7 @@
                     "hidden": false,
                     "query": {
                       "datasource": {
-                        "name": "cfyc5w7ptvy80d"
+                        "name": "PBFA97CFB590B2093"
                       },
                       "group": "prometheus",
                       "kind": "DataQuery",
@@ -14902,7 +14919,7 @@
                     "hidden": false,
                     "query": {
                       "datasource": {
-                        "name": "cfyc5w7ptvy80d"
+                        "name": "PBFA97CFB590B2093"
                       },
                       "group": "prometheus",
                       "kind": "DataQuery",
@@ -15021,7 +15038,7 @@
                     "hidden": false,
                     "query": {
                       "datasource": {
-                        "name": "cfyc5w7ptvy80d"
+                        "name": "PBFA97CFB590B2093"
                       },
                       "group": "prometheus",
                       "kind": "DataQuery",

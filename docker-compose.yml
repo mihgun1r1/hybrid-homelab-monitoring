@@ -49,6 +49,7 @@ services:
       - "3000:3000"
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
     networks:
       - monitoring_net
 
@@ -109,7 +110,7 @@ services:
   ad_exporter:
     build: ./ad_exporter
     container_name: ad_exporter
-    restart: unless-stopped
+    restart: on-failure
     environment:
       - LDAP_SERVER=samba_ad
       - LDAP_USER=CN=Administrator,CN=Users,DC=homelab,DC=lan
@@ -120,6 +121,16 @@ services:
       - samba_ad
     networks:
       - monitoring_net
+
+  # 10. Portal Dashboard
+  portal_dashboard:
+    image: nginx:alpine
+    container_name: homelab_portal
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./dashboard:/usr/share/nginx/html:ro
 
 networks:
   monitoring_net:
